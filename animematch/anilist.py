@@ -52,8 +52,8 @@ def parse_anilist(item):
 
 def fetch_anilist_catalog(pages=2, timeout=12, session=None):
     """Fetch popular anime with cover images from AniList."""
-    if not 1 <= pages <= 5:
-        raise ValueError("pages must be between 1 and 5")
+    if not 1 <= pages <= 10:
+        raise ValueError("pages must be between 1 and 10")
     client = session or requests
     entries = []
     for page in range(1, pages + 1):
@@ -74,6 +74,8 @@ def fetch_anilist_catalog(pages=2, timeout=12, session=None):
                 break
             raise RuntimeError("Could not retrieve anime data from AniList.") from exc
         entries.extend(entry for item in items if (entry := parse_anilist(item)) is not None)
+        if len(items) < 50:
+            break
     if not entries:
         raise RuntimeError("AniList returned no usable anime entries.")
     return pd.DataFrame(entries).drop_duplicates(subset=["title"]).reset_index(drop=True)
