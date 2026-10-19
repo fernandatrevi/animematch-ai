@@ -1,72 +1,209 @@
 # AnimeMatch 🎌
 
-A personalized anime discovery website with a custom **HTML, CSS, and JavaScript** frontend, a **FastAPI** backend, and a content-based recommender built with **scikit-learn**. The original Streamlit prototype is retained.
+**Find your next obsession.**
 
-## Website (HTML + FastAPI)
+Discover anime tailored to your taste.
 
-Run the custom website locally:
+[**🌐 Explore the live website**](https://animematch.onrender.com)
 
-```bash
-pip install -r requirements.txt
-uvicorn server:app --reload
-```
+AnimeMatch is a personalized anime discovery website that recommends titles based on a viewer's favorite anime, written preferences, and optional filters. It combines a custom web interface with a **content-based recommendation model** built in Python.
 
-Open **http://127.0.0.1:8000** in your browser. The FastAPI server serves the HTML/CSS/JavaScript frontend and the `/api/catalog` and `/api/recommend` endpoints. This website requires a Python backend; it cannot be hosted on GitHub Pages alone.
+The project focuses on **applied data analytics, natural language processing, recommendation systems, and model interpretability**.
 
-## Original Streamlit prototype
+## Project overview
 
-The previous version remains available and can be deployed through [Streamlit Community Cloud](https://share.streamlit.io/) with `app.py` as the entry point. The Streamlit deployment does **not** automatically switch to the HTML website.
+Finding something new to watch can be difficult when anime platforms contain hundreds of titles, sequels, and related series. AnimeMatch helps viewers narrow down their choices by comparing the **genres and synopses** of anime with their interests.
+
+Rather than ranking anime only by popularity, the recommendation engine uses **TF-IDF and cosine similarity** to identify titles with related content. It also explains which shared textual features contributed to the recommendation.
+
+**Live website:** https://animematch.onrender.com
 
 ## Features
-- Browse an expanded catalog fetched from Jikan's public anime API.
-- Display cover images, synopses, genres, episode counts, and ratings when available.
-- Select favorite titles or describe what you want to watch.
-- Receive explainable TF-IDF + cosine-similarity recommendations.
-- Optionally limit results by episode count.
-- Fall back to an 18-title offline catalog if the API is unavailable.
-- Train a separate, optional review sentiment classifier with labeled reviews.
 
-## Streamlit quick start
+- **Personalized recommendations:** Select favorite anime and/or describe the kind of story you want to watch.
+- **Expanded anime catalog:** Fetch up to 500 anime entries through paginated AniList requests when the service is available.
+- **Anime metadata:** Display cover art, synopses, genres, episode counts, and ratings where available.
+- **Optional filters:** Narrow recommendations by genre, minimum rating, and maximum episode count.
+- **Franchise-aware results:** Exclude selected favorites and group some related seasons or sequels to reduce repetitive recommendations (including Tokyo Ghoul and Tokyo Ghoul √A).
+- **Why this anime?:** Expand each recommendation to see the textual features that contributed to its ranking.
+- **Responsive interface:** Custom dark-themed HTML, CSS, and JavaScript website.
+- **Fallback catalog:** Use a smaller local sample catalog if the external APIs are unavailable.
+
+## How the recommendation model works
+
+### 1. Collect viewer preferences
+
+The viewer selects one or more favorite anime, enters a free-text description, or uses both. For example:
+
+- Favorite anime: **Tokyo Ghoul**
+- Description: **Dark psychological horror with a mystery**
+
+### 2. Prepare the anime descriptions
+
+For every anime, the model combines the **genres and synopsis** into a text document. Genre text is repeated to give genre matches more influence in the representation.
+
+The website retrieves catalog data from the Jikan API when available and falls back to AniList if Jikan fails. If both are unavailable, the local sample catalog is used.
+
+### 3. Convert text into TF-IDF vectors
+
+The recommendation engine uses scikit-learn's `TfidfVectorizer` with English stop-word removal and **unigrams and bigrams** (`ngram_range=(1, 2)`).
+
+**TF-IDF (Term Frequency–Inverse Document Frequency)** assigns weights to words and phrases based on how informative they are within the catalog. Common words receive less emphasis than terms that help distinguish anime descriptions.
+
+This converts textual information into numeric vectors that can be compared mathematically.
+
+### 4. Construct the viewer's preference vector
+
+The model creates a representation of the selected favorites and/or written description. If both are provided, it combines their vectors by averaging them.
+
+### 5. Rank titles using cosine similarity
+
+The system compares the viewer's preference vector with the vector for each anime using **cosine similarity**:
+
+```text
+cosine_similarity(A, B) = (A · B) / (||A|| × ||B||)
+```
+
+A larger similarity score indicates greater overlap in the TF-IDF representation. **It is not a probability that the viewer will enjoy the anime**, and it should not be confused with the anime's public rating.
+
+### 6. Apply filters and reduce repeated franchises
+
+The system excludes selected favorites and uses title-based franchise rules to remove certain related seasons. It then applies optional genre, minimum-rating, and episode-count filters, sorts by similarity (with public rating as a secondary sorting criterion), and returns the highest-ranked titles.
+
+Franchise detection is heuristic, not a comprehensive anime relationship database. Some spin-offs or alternate titles may still be treated as separate series.
+
+## Explainability: "Why this anime?"
+
+AnimeMatch includes an expandable **Why this anime?** section on recommendation cards.
+
+The explanation module (`animematch/explain.py`) uses the **same TF-IDF vectorizer configuration and viewer preferences** as the recommender. For a recommended title, it computes the element-wise product between the title's TF-IDF vector and the normalized preference vector, then identifies the highest positive term contributions.
+
+These terms are displayed to show **which shared words or phrases helped increase the similarity score**.
+
+For example, when the relevant terms overlap, an explanation may highlight words such as `horror`, `mystery`, or `psychological`.
+
+**Important distinctions:**
+
+- Explanations are derived from model features, not generated by an LLM.
+- Displayed genres provide additional context; they are not a separate causal analysis.
+- Shared terms help explain textual similarity, **not** whether the viewer will actually like the anime.
+- Explanations do not claim to identify the emotional or narrative reasons behind a viewer's preferences.
+
+This feature makes the ranking process more transparent and demonstrates a practical approach to **interpretable machine learning**.
+
+## Technology stack
+
+| Layer | Technologies | Purpose |
+| --- | --- | --- |
+| Frontend | HTML, CSS, JavaScript | Responsive website, inputs, filters, and recommendation cards |
+| Backend | Python, FastAPI, Pydantic | Serve the website and validate API requests |
+| Data processing | pandas, NumPy | Prepare anime metadata and model inputs |
+| Recommendation model | scikit-learn | TF-IDF vectorization and cosine similarity |
+| Anime data | Jikan API, AniList GraphQL API | Retrieve anime metadata and cover image URLs |
+| Testing | pytest, FastAPI TestClient | Unit tests and API integration tests |
+| Version control | Git, GitHub | Track development and code changes |
+| Deployment | Render | Host the Python backend and website |
+
+## Project architecture
+
+```text
+animematch-ai/
+├── web/
+│   ├── index.html             # Website structure
+│   ├── styles.css             # Responsive visual design
+│   └── app.js                 # Search, filters, and recommendation cards
+├── animematch/
+│   ├── catalog.py             # Catalog validation and local sample
+│   ├── jikan.py               # Jikan API integration
+│   ├── anilist.py             # AniList GraphQL integration
+│   ├── recommender.py         # TF-IDF ranking and franchise filtering
+│   ├── explain.py             # Recommendation feature explanations
+│   ├── agent.py               # Deterministic recommendation wrapper
+│   └── sentiment.py           # Separate sentiment classifier utility
+├── tests/                     # Automated tests
+├── server.py                  # FastAPI application and JSON endpoints
+├── app.py                     # Original Streamlit prototype
+├── render.yaml                # Render deployment configuration
+└── requirements.txt           # Python dependencies
+```
+
+## Run locally
+
+Clone the repository and install the dependencies:
+
 ```bash
+git clone https://github.com/fernandatrevi/animematch-ai.git
+cd animematch-ai
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-streamlit run app.py
 ```
 
-Windows activation: `.venv\\Scripts\\activate`. The app usually opens at `http://localhost:8501`.
+On Windows, activate the environment using `.venv\Scripts\activate`.
 
-## Tests
+Start the website:
+
+```bash
+uvicorn server:app --reload
+```
+
+Open **http://127.0.0.1:8000**.
+
+### API endpoints
+
+- `GET /` — HTML website
+- `GET /api/catalog` — Anime catalog and data source
+- `POST /api/recommend` — Recommendations and model explanations
+- `GET /api/health` — Health check
+
+Example request:
+
+```json
+{
+  "favorites": ["Tokyo Ghoul"],
+  "description": "Dark psychological mystery",
+  "genre": "Horror",
+  "min_score": 7,
+  "max_episodes": 24,
+  "limit": 9
+}
+```
+
+## Run tests
+
 ```bash
 python -m pytest -q
 ```
 
-## Architecture
-- `web/index.html`, `web/styles.css`, `web/app.js`: custom browser interface.
-- `server.py`: FastAPI website and JSON endpoints.
-- `app.py`: Streamlit interface and one-hour catalog cache.
-- `animematch/jikan.py`: Jikan API client and metadata mapping.
-- `animematch/catalog.py`: offline catalog and validation.
-- `animematch/recommender.py`: TF-IDF vectorization, cosine similarity, and filtering.
-- `animematch/agent.py`: recommendation result formatting.
-- `animematch/sentiment.py`: independent supervised sentiment-classification utility.
-- `tests/`: automated unit tests and mocked API tests.
+The test suite includes recommender behavior, franchise filtering, API response handling, and explanation logic. Tests should be run after changes; a successful deployment alone does not prove that every test passes.
 
-## Data source and attribution
-Anime metadata and image URLs are fetched from the [Jikan API](https://docs.api.jikan.moe/), an unofficial public MyAnimeList API. Poster images are linked from their original providers and are not stored in this repository. Jikan may impose rate limits or become temporarily unavailable. The catalog is cached for one hour to reduce requests. This project is educational and is not affiliated with Jikan or MyAnimeList.
+## Original Streamlit prototype
 
-## How recommendations work
-The engine represents genres and synopses as TF-IDF vectors. It combines vectors for selected favorites and optional search text, ranks candidate anime by cosine similarity, excludes selected favorites, and applies episode filters. Similarity is not a probability of enjoyment.
+The original version remains in `app.py` and can be launched separately:
 
-## Deployment note
+```bash
+streamlit run app.py
+```
 
-Deploy the HTML website to a Python-capable host using `uvicorn server:app --host 0.0.0.0 --port $PORT` (adapt the port syntax to the host). A public deployment of the new HTML website has not yet been verified.
+The HTML/FastAPI website is the current public-facing version. The Streamlit prototype is retained as part of the project's development history.
 
-## Current limitations
-The catalog is limited to three pages of Jikan's popularity listing (up to 75 entries before filtering), not the entire MyAnimeList database. Entries without a usable synopsis are omitted; titles with unknown episode counts are excluded when the episode filter is active. API data is external and may change. This version is a deterministic recommendation assistant, **not a generative LLM agent**. The sentiment classifier is not yet connected to the interface.
+## Data sources and attribution
 
-## Roadmap
-Expand catalog search and pagination, measure Precision@K and Recall@K on real preference data, evaluate review sentiment on held-out labeled reviews, and add a tool-using LLM with grounded explanations.
+AnimeMatch uses the [Jikan API](https://docs.api.jikan.moe/) and the [AniList API](https://docs.anilist.co/) to obtain anime metadata and image URLs. The live site may show a different catalog size depending on external API availability and fallback behavior.
+
+Artwork is displayed from source-provided URLs and belongs to its respective rights holders. AnimeMatch is an independent educational project and is not affiliated with AniList, Jikan, MyAnimeList, or the anime rights holders.
+
+## Limitations and next steps
+
+- The catalog is **not the entire anime universe**; current AniList pagination is capped at ten pages (up to 500 entries before filtering).
+- The franchise filter relies on title patterns and does not capture every sequel or spin-off.
+- Recommendation quality has **not yet been validated against real user preference labels**. Similarity-based ranking alone does not establish recommendation accuracy.
+- The system does not currently learn from user ratings or watch history.
+- The separate sentiment classifier is not connected to the public interface.
+- This is a deterministic content-based recommender, **not a generative AI agent**.
+
+Possible next steps include evaluating Precision@K and Recall@K using collected preference data, adding structured franchise relationships, and expanding the catalog search experience.
 
 ## License
+
 MIT.
