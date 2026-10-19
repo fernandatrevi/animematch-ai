@@ -118,6 +118,21 @@ async function loadCatalog() {
       option.value = anime.title;
       options.append(option);
     });
+    const genreSelect = $("#genre-filter");
+    const genreNames = new Set();
+    state.catalog.forEach((anime) => {
+      // AniList provides multi-word genres (e.g. "Slice of Life").
+      const knownGenres = ["Action", "Adventure", "Comedy", "Drama", "Ecchi", "Fantasy", "Horror", "Mahou Shoujo", "Mecha", "Music", "Mystery", "Psychological", "Romance", "Sci-Fi", "Slice of Life", "Sports", "Supernatural", "Thriller"];
+      knownGenres.forEach((genre) => {
+        if ((anime.genres || "").split(" ").length && (" " + anime.genres + " ").toLowerCase().includes((" " + genre + " ").toLowerCase())) genreNames.add(genre);
+      });
+    });
+    [...genreNames].sort().forEach((genre) => {
+      const option = document.createElement("option");
+      option.value = genre;
+      option.textContent = genre;
+      genreSelect.append(option);
+    });
     $("#data-status").textContent = payload.count + " anime available · Source: " + payload.source;
   } catch {
     $("#data-status").textContent = "Unable to load the catalog. Please try refreshing.";
@@ -139,6 +154,8 @@ async function findRecommendations(event) {
         favorites: state.favorites,
         description: $("#description").value.trim(),
         max_episodes: $("#limit-episodes").checked ? Number($("#max-episodes").value) : null,
+        genre: $("#genre-filter").value || null,
+        min_score: $("#score-filter").value ? Number($("#score-filter").value) : null,
         limit: 9
       })
     });
