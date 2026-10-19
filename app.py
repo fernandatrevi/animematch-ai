@@ -5,6 +5,7 @@ import streamlit as st
 from animematch.agent import answer_request
 from animematch.catalog import sample_catalog
 from animematch.jikan import fetch_anime_catalog, fetch_anime_poster
+from animematch.anilist import fetch_anilist_catalog, fetch_anilist_poster
 
 st.set_page_config(page_title="AnimeMatch AI", page_icon="🎌", layout="wide")
 st.title("🎌 AnimeMatch AI")
@@ -13,26 +14,28 @@ st.caption("Discover anime with personalized recommendations and real cover art.
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def load_live_catalog():
-    return fetch_anime_catalog(pages=1)
+    try:
+        return fetch_anime_catalog(pages=1), "Jikan"
+    except RuntimeError:
+        return fetch_anilist_catalog(pages=2), "AniList"
 
 
 @st.cache_data(ttl=86400, show_spinner=False)
 def lookup_poster(title):
-    return fetch_anime_poster(title)
+    return fetch_anilist_poster(title) or fetch_anime_poster(title)
 
 
 with st.spinner("Loading anime catalog and posters..."):
     try:
-        catalog = load_live_catalog()
-        source = "Jikan API"
+        catalog, source = load_live_catalog()
     except RuntimeError:
         catalog = sample_catalog()
         source = "offline demo"
 
-if source == "Jikan API":
-    st.success(f"Explore {len(catalog)} anime with live metadata and cover art from Jikan (MyAnimeList unofficial API).")
+if source in ("Jikan", "AniList"):
+    st.success(f"Explore {len(catalog)} anime with metadata and cover art from {source}.")
 else:
-    st.warning("Jikan catalog is temporarily unavailable. Using the 18-title offline catalog; poster lookup will be attempted separately.")
+    st.warning("Live catalogs are temporarily unavailable. Using the 18-title offline catalog; poster lookup will be attempted separately.")
 
 with st.form("recommendation"):
     favorites = st.multiselect(
@@ -94,4 +97,4 @@ with st.expander("How does it work?"):
         "Similarity is not a probability of enjoyment. "
         "This is a content-based recommendation assistant, not a generative LLM agent."
     )
-st.caption("Anime metadata and artwork: Jikan API / MyAnimeList. Images remain hosted by their providers.")
+st.caption("Anime metadata and artwork: Jikan / AniList. Images remain hosted by their providers.")
