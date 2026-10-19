@@ -71,6 +71,11 @@ def index():
     return FileResponse(ROOT / "web" / "index.html")
 
 
+@app.get("/api/health")
+def health():
+    return {"status": "ok", "service": "AnimeMatch"}
+
+
 @app.get("/api/catalog")
 def catalog():
     data, source = get_catalog()
