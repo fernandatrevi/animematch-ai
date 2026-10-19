@@ -30,7 +30,7 @@ def get_catalog():
         data, source = fetch_anime_catalog(pages=1, timeout=6), "Jikan"
     except RuntimeError:
         try:
-            data, source = fetch_anilist_catalog(pages=2, timeout=8), "AniList"
+            data, source = fetch_anilist_catalog(pages=10, timeout=8), "AniList"
         except RuntimeError:
             data, source = sample_catalog(), "Offline demo"
     with _cache_lock:
@@ -64,6 +64,8 @@ class RecommendationRequest(BaseModel):
     description: str = Field(default="", max_length=500)
     max_episodes: int | None = Field(default=None, ge=1, le=1000)
     limit: int = Field(default=9, ge=1, le=24)
+    genre: str | None = Field(default=None, max_length=60)
+    min_score: float | None = Field(default=None, ge=0, le=10)
 
 
 @app.get("/")
@@ -86,7 +88,8 @@ def catalog():
 def recommendations(payload: RecommendationRequest):
     data, source = get_catalog()
     try:
-        results = recommend(data, payload.favorites, payload.description, payload.max_episodes, payload.limit)
+        results = recommend(data, payload.favorites, payload.description, payload.max_episodes, payload.limit,
+                            genre=payload.genre, min_score=payload.min_score)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     return {"source": source, "items": [
