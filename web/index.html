@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10121c">
+  <meta name="description" content="Find your next obsession. Discover anime tailored to your taste.">
+  <title>AnimeMatch — Find your next obsession</title>
+  <link rel="stylesheet" href="/static/styles.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+  <header class="topbar wrap">
+    <a href="/" class="brand" aria-label="AnimeMatch home"><span class="brand-icon">✦</span> Anime<span>Match</span></a>
+    <nav aria-label="Main navigation"><a href="#discover">Discover</a><a href="#recommendations">Recommendations</a></nav>
+  </header>
+  <main>
+    <section class="hero wrap" id="discover">
+      <div class="hero-content">
+        <div class="eyebrow"><span class="sparkle">✦</span> YOUR NEXT FAVORITE STORY STARTS HERE</div>
+        <h1>Find your next <em>obsession.</em></h1>
+        <p class="hero-subtitle">Discover anime tailored to your taste.</p>
+        <form id="search-form" class="search-panel">
+          <label for="description">WHAT ARE YOU IN THE MOOD FOR?</label>
+          <div class="search-field"><span aria-hidden="true">⌕</span><input id="description" maxlength="500" placeholder="Dark fantasy with psychological tension..." autocomplete="off"></div>
+          <label for="favorite-search">ANIME YOU ALREADY LOVE</label>
+          <input id="favorite-search" list="anime-options" placeholder="Search for a favorite anime..." autocomplete="off">
+          <datalist id="anime-options"></datalist>
+          <div class="favorite-row"><div id="favorites" class="chips" aria-live="polite"></div><button type="button" id="add-favorite" class="secondary-button">+ Add</button></div>
+          <div class="filter-row"><label class="check-label"><input type="checkbox" id="limit-episodes"> Limit episode count</label><input type="number" id="max-episodes" min="1" max="1000" value="24" disabled aria-label="Maximum episodes"></div>
+          <button class="primary-button" type="submit" id="submit-button">Find my anime <span aria-hidden="true">→</span></button>
+        </form>
+        <p class="data-status" id="data-status" role="status">Loading anime catalog...</p>
+      </div>
+      <div class="hero-decoration" aria-hidden="true"><span class="halo"></span><span class="star star-one">✧</span><span class="star star-two">✦</span><span class="star star-three">✳</span><div class="hero-quote">A whole universe<br>of stories awaits.</div></div>
+    </section>
+    <section class="results-section wrap" id="recommendations">
+      <div class="section-heading"><div><span class="section-kicker">CURATED FOR YOU</span><h2>Recommended <em>for you</em></h2></div><span class="count" id="result-count"></span></div>
+      <div id="message" class="message" role="status">Choose a favorite or describe what you enjoy to get started.</div>
+      <div class="anime-grid" id="results"></div>
+    </section>
+  </main>
+  <footer class="wrap"><span>✦ AnimeMatch</span><span>Anime data and artwork from Jikan / AniList. Images belong to their respective owners.</span></footer>
+</body>
+</html>
