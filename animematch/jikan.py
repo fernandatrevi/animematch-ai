@@ -52,6 +52,8 @@ def fetch_anime_catalog(pages=3, timeout=12, session=None):
             response.raise_for_status()
             payload = response.json()
         except (requests.RequestException, ValueError) as exc:
+            if items:
+                break  # Keep successful pages if a later request is rate-limited.
             raise RuntimeError("Could not retrieve anime data from Jikan.") from exc
         if not isinstance(payload, dict) or not isinstance(payload.get("data"), list):
             raise RuntimeError("Jikan returned an unexpected response.")
@@ -61,3 +63,24 @@ def fetch_anime_catalog(pages=3, timeout=12, session=None):
         raise RuntimeError("Jikan returned no usable anime entries.")
     data = pd.DataFrame(items)
     return data.drop_duplicates(subset=["mal_id"]).reset_index(drop=True)
+
+def fetch_anime_poster(title, timeout=8, session=None):
+    """Look up a single anime poster; return None if unavailable."""
+    client = session or requests
+    try:
+        response = client.get(
+            f"{BASE_URL}/anime",
+            params={"q": title, "limit": 1},
+            headers=HEADERS,
+            timeout=timeout,
+        )
+        response.raise_for_status()
+        data = response.json().get("data", [])
+        if data:
+            images = data[0].get("images") or {}
+            jpg = images.get("jpg") or {}
+            webp = images.get("webp") or {}
+            return webp.get("large_image_url") or jpg.get("large_image_url") or jpg.get("image_url")
+    except (requests.RequestException, ValueError, AttributeError, TypeError):
+        pass
+    return None
