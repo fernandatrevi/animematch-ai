@@ -4,7 +4,7 @@ import streamlit as st
 
 from animematch.agent import answer_request
 from animematch.catalog import sample_catalog
-from animematch.jikan import fetch_anime_catalog
+from animematch.jikan import fetch_anime_catalog, fetch_anime_poster
 
 st.set_page_config(page_title="AnimeMatch AI", page_icon="🎌", layout="wide")
 st.title("🎌 AnimeMatch AI")
@@ -13,7 +13,12 @@ st.caption("Discover anime with personalized recommendations and real cover art.
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def load_live_catalog():
-    return fetch_anime_catalog(pages=3)
+    return fetch_anime_catalog(pages=1)
+
+
+@st.cache_data(ttl=86400, show_spinner=False)
+def lookup_poster(title):
+    return fetch_anime_poster(title)
 
 
 with st.spinner("Loading anime catalog and posters..."):
@@ -27,7 +32,7 @@ with st.spinner("Loading anime catalog and posters..."):
 if source == "Jikan API":
     st.success(f"Explore {len(catalog)} anime with live metadata and cover art from Jikan (MyAnimeList unofficial API).")
 else:
-    st.warning("Jikan is temporarily unavailable. Showing the 18-title offline catalog without posters.")
+    st.warning("Jikan catalog is temporarily unavailable. Using the 18-title offline catalog; poster lookup will be attempted separately.")
 
 with st.form("recommendation"):
     favorites = st.multiselect(
@@ -58,8 +63,11 @@ if submitted:
             with st.container(border=True):
                 poster, details = st.columns([1, 4], gap="large")
                 with poster:
-                    if isinstance(anime.get("image_url"), str) and anime["image_url"].startswith("https://"):
-                        st.image(anime["image_url"], use_container_width=True)
+                    image_url = anime.get("image_url")
+                    if not isinstance(image_url, str) or not image_url.startswith("https://"):
+                        image_url = lookup_poster(anime["title"])
+                    if image_url:
+                        st.image(image_url, use_container_width=True)
                     else:
                         st.caption("Poster unavailable")
                 with details:
