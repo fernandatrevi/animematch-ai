@@ -101,6 +101,31 @@ function createCard(anime) {
     a.textContent = "Explore anime ↗";
     content.append(a);
   }
+  if (anime.explanation) {
+    const details = document.createElement("details");
+    details.className = "explanation";
+    const summary = document.createElement("summary");
+    summary.textContent = "Why this anime?";
+    const body = document.createElement("div");
+    body.className = "explanation-body";
+    const keywords = anime.explanation.keywords || [];
+    const genres = anime.explanation.genres || [];
+    const explanationText = document.createElement("p");
+    explanationText.textContent = keywords.length
+      ? "This recommendation shares terms from your selected anime or description: " + keywords.join(", ") + "."
+      : "This title was ranked using its synopsis and genres compared with your preferences.";
+    body.append(explanationText);
+    if (genres.length) {
+      const genreText = document.createElement("p");
+      genreText.textContent = "Genres: " + genres.join(", ") + ".";
+      body.append(genreText);
+    }
+    const method = document.createElement("small");
+    method.textContent = "Based on TF-IDF and cosine similarity, not a user rating.";
+    body.append(method);
+    details.append(summary, body);
+    content.append(details);
+  }
   card.append(poster, content);
   return card;
 }
