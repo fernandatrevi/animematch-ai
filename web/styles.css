@@ -13,3 +13,10 @@
 .advanced-filters select{width:100%;background:var(--panel2);border:1px solid #454052;border-radius:10px;color:#f8f4fb;padding:12px;outline:0}
 .advanced-filters select:focus{border-color:var(--pink)}
 @media(max-width:430px){.advanced-filters{grid-template-columns:1fr}}
+
+.explanation{border-top:1px solid var(--line);margin-top:15px;padding-top:13px}
+.explanation summary{color:var(--pink);font-weight:700;font-size:13px;cursor:pointer;list-style-position:inside}
+.explanation summary:hover{color:#ffb0c4}
+.explanation-body{padding:9px 0 0 5px;color:var(--muted);font-size:12px;line-height:1.6}
+.explanation-body p{margin:7px 0}
+.explanation-body small{display:block;margin-top:9px;color:#8f8b9e;font-size:11px}
