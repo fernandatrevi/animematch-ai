@@ -17,6 +17,9 @@ SAMPLE = [
 ("Made in Abyss","Adventure Mystery Fantasy","Young explorers descend into a mysterious abyss.",8.6,13),
 ("Mob Psycho 100","Action Comedy Supernatural","A psychic teenager tries to live a normal life.",8.5,12),
 ("Odd Taxi","Mystery Drama Thriller","A taxi driver becomes involved in a disappearance.",8.7,13),
+("Tokyo Ghoul","Action Horror Supernatural Psychological","A college student becomes a half-ghoul and struggles between human and ghoul worlds.",None,12),
+("Blue Lock","Sports Drama Psychological","Young football strikers compete in an intense program to become Japan's best striker.",None,24),
+("Re:Zero − Starting Life in Another World","Fantasy Drama Psychological Thriller","A young man transported to a fantasy world discovers that death sends him back to an earlier point.",None,25),
 ]
 COLUMNS=["title","genres","synopsis","score","episodes"]
 
