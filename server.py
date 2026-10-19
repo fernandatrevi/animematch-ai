@@ -14,6 +14,7 @@ from animematch.catalog import sample_catalog
 from animematch.jikan import fetch_anime_catalog
 from animematch.anilist import fetch_anilist_catalog
 from animematch.recommender import recommend
+from animematch.explain import explain_recommendations
 
 ROOT = Path(__file__).resolve().parent
 app = FastAPI(title="AnimeMatch", version="0.3")
@@ -92,7 +93,9 @@ def recommendations(payload: RecommendationRequest):
                             genre=payload.genre, min_score=payload.min_score)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+    explanations = explain_recommendations(data, results, payload.favorites, payload.description)
     return {"source": source, "items": [
-        {**serialize_row(row), "similarity": round(float(row.similarity), 4)}
-        for row in results.itertuples()
+        {**serialize_row(row), "similarity": round(float(row.similarity), 4),
+         "explanation": explanations[index]}
+        for index, row in enumerate(results.itertuples())
     ]}
