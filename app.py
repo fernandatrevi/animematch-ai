@@ -22,7 +22,14 @@ def load_live_catalog():
 
 @st.cache_data(ttl=86400, show_spinner=False)
 def lookup_poster(title):
-    return fetch_anilist_poster(title) or fetch_anime_poster(title)
+    for provider in (fetch_anilist_poster, fetch_anime_poster):
+        try:
+            poster = provider(title)
+            if isinstance(poster, str) and poster.startswith("https://"):
+                return poster
+        except (RuntimeError, ValueError, TimeoutError, ConnectionError):
+            continue
+    return None
 
 
 with st.spinner("Loading anime catalog and posters..."):
