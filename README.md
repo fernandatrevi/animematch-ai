@@ -1,10 +1,11 @@
-# AnimeMatch 🎌
+# AnimeMatch AI — Content-Based Recommendation System
 
 **Find your next obsession.**
 
 Discover anime tailored to your taste.
 
-[**🌐 Explore the live website**](https://animematch.onrender.com)
+**[Launch AnimeMatch AI — Live Website](https://animematch.onrender.com/)**  
+**[View source repository](https://github.com/fernandatrevi/animematch-ai)**
 
 AnimeMatch is a personalized anime discovery website that recommends titles based on a viewer's favorite anime, written preferences, and optional filters. It combines a custom web interface with a **content-based recommendation model** built in Python.
 
