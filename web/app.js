@@ -39,7 +39,7 @@ function addFavorite() {
   const found = state.catalog.find((item) => item.title.toLowerCase() === title.toLowerCase());
   if (!found) {
     message.textContent = "Select an anime from the available catalog.";
-    return;
+    return false;
   }
   if (!state.favorites.includes(found.title) && state.favorites.length < 10) {
     state.favorites.push(found.title);
@@ -47,6 +47,7 @@ function addFavorite() {
   }
   input.value = "";
   message.textContent = "";
+  return true;
 }
 
 function createCard(anime) {
@@ -166,6 +167,9 @@ async function loadCatalog() {
 
 async function findRecommendations(event) {
   event.preventDefault();
+  // Treat a valid title still typed in the field as a selected favorite.
+  // Previously, users had to click + Add, so the title could be recommended back to them.
+  if ($("#favorite-search").value.trim() && !addFavorite()) return;
   const button = $("#submit-button");
   button.disabled = true;
   button.textContent = "Finding your anime...";
