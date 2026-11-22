@@ -31,3 +31,14 @@ def test_missing_preferences_is_validation_error(monkeypatch):
     monkeypatch.setattr(server, "get_catalog", lambda: (server.sample_catalog(), "Offline demo"))
     response = client.post("/api/recommend", json={})
     assert response.status_code == 400
+
+
+def test_selected_tokyo_ghoul_is_not_recommended(monkeypatch):
+    """The API must exclude a favorite even when the text query is similar."""
+    monkeypatch.setattr(server, "get_catalog", lambda: (server.sample_catalog(), "Offline demo"))
+    response = client.post("/api/recommend", json={
+        "favorites": ["Tokyo Ghoul"], "description": "dark fantasy", "limit": 9
+    })
+    assert response.status_code == 200
+    titles = [item["title"] for item in response.json()["items"]]
+    assert all(not title.casefold().startswith("tokyo ghoul") for title in titles)
